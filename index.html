@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font: 13px Helvetica, Arial;
+        background-color: rgb(35, 35, 36);
+      }
+      form {
+        padding: 3px;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+      }
+
+      input,
+      button {
+        width: 100%;
+      }
+      #messages {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+      }
+      #messages li {
+        display: flex;
+        padding: 5px 10px;
+      }
+      #messages li:nth-child(odd) {
+        background: #eee;
+      }
+    </style>
+  </head>
+  <body>
+    <ul id="messages"></ul>
+    <form>
+      <div class="thumb"></div>
+      <input id="id" type="hidden" />
+      <input id="thumb" type="hidden" />
+      <input id="name" placeholder="name" autocomplete="off" />
+      <input id="msg" placeholder="write something" autocomplete="off" />
+      <button>Send</button>
+    </form>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+    <script>
+      $(() => {
+        $.ajax({
+          url: "https://randomuser.me/api/",
+          dataType: "json",
+          success: function (data) {
+            $("#name").val(data.results[0].login.username);
+            $("#id").val(data.results[0].login.uuid);
+            $("#thumb").val(data.results[0].picture.thumbnail);
+            $(".thumb").html(
+              "<img src=" +
+                data.results[0].picture.thumbnail +
+                " width='25' height='25' />"
+            );
+          },
+        });
+
+        var socket = io();
+        $("form").submit((e) => {
+          e.preventDefault();
+          var name = $("#name").val();
+          var msg = $("#msg").val();
+          var id = $("#id").val();
+          var thumb = $("#thumb").val();
+          socket.emit("chat message", {
+            name: name,
+            msg: msg,
+            userId: id,
+            thumb: thumb,
+          });
+          $("#m").val("");
+          $("#msg").val("");
+          return false;
+        });
+        socket.on("chat message", function (msg) {
+          $("#messages").append(
+            $("<li>").html(
+              "<img src=" +
+                msg.thumb +
+                " width='25' height='25' />  <div><small>" +
+                msg.name +
+                "</small><p>" +
+                msg.msg +
+                "</p></div>"
+            )
+          );
+        });
+      });
+    </script>
+  </body>
+</html>
